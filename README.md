@@ -1,6 +1,12 @@
 <h1 align="center">
 Marvelous MLOps End-to-end MLOps with Databricks course
 
+## Week-1
+Use the dataset called diamonds.csv from Kaggle:
+
+[Diamonds](https://www.kaggle.com/datasets/shivam2503/diamonds?resource=download)
+Analyze diamonds by their cut, color, clarity, price, and other attributes
+
 ## Practical information
 - Weekly lectures on Wednesdays 16:00-18:00 CET.
 - Code for the lecture is shared before the lecture.
