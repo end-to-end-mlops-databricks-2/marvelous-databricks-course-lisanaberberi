@@ -1,0 +1,19 @@
+# This is a Databricks asset bundle definition for course-code-hub.
+# The Databricks extension requires databricks.yml configuration file.
+# See https://docs.databricks.com/dev-tools/bundles/index.html for documentation.
+
+bundle:
+  name: marvelous-databricks-course-lisanaberberi
+
+
+targets:
+  dev:
+    mode: development
+    default: true
+    cluster_id: 0311-120304-swf5kado
+    workspace:
+      host: https://dbc-4894232b-9fc5.cloud.databricks.com
+      root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.target}/${bundle.name}
+    # workspace:
+    #   host: https://dbc-4894232b-9fc5.cloud.databricks.com
+      
