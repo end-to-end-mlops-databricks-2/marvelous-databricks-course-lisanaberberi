@@ -10,7 +10,7 @@ from house_price.data_processor import DataProcessor
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-config = ProjectConfig.from_yaml(config_path="../project_config.yml")
+config = ProjectConfig.from_yaml(config_path="../project_config.yaml")
 
 logger.info("Configuration loaded:")
 logger.info(yaml.dump(config, default_flow_style=False))
@@ -19,19 +19,20 @@ logger.info(yaml.dump(config, default_flow_style=False))
 spark = SparkSession.builder.getOrCreate()
 
 df = spark.read.csv(
-    f"/Volumes/{config.catalog_name}/{config.schema_name}/data/diamonds.csv", header=True, inferSchema=True
+    f"/Volumes/{config.catalog_name}/{config.schema_name}/data/data.csv", header=True, inferSchema=True
 ).toPandas()
 
-df.show()
-# # Force headers to uppercase
-# for colname in diamonds_df.columns:
-#     if colname == '"table"':
-#        new_colname = "TABLE_PCT"
-#     else:
-#         new_colname = str.upper(colname)
-#     diamonds_df = diamonds_df.with_column_renamed(colname, new_colname)
-
-# diamonds_df.show()
-
-
 # Initialize DataProcessor
+data_processor = DataProcessor(df, config, spark)
+
+# Preprocess the data
+data_processor.preprocess()
+
+# Split the data
+X_train, X_test = data_processor.split_data()
+logger.info("Training set shape: %s", X_train.shape)
+logger.info("Test set shape: %s", X_test.shape)
+
+# Save to catalog
+logger.info("Saving data to catalog")
+data_processor.save_to_catalog(X_train, X_test)
