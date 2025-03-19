@@ -1,7 +1,7 @@
 catalog_name: mlops_dev
 schema_name: lisanabe
 
-experiment_name:  /Shared/house-prices
+experiment_name_basic:  /Shared/house-prices-basic
 
 parameters:
   learning_rate: 0.01
