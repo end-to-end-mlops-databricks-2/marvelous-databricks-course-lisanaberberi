@@ -203,7 +203,7 @@ class CustomModel:
         """
         logger.info("🔄 Loading model from MLflow alias 'production'...")
 
-        model_uri = f"models:/{self.catalog_name}.{self.schema_name}.house_prices_model_custom@latest-model"
+        model_uri = f"models:/{self.catalog_name}.{self.schema_name}.house_prices_model_custom@champion-model"
         model = mlflow.pyfunc.load_model(model_uri)
 
         logger.info("✅ Model successfully loaded.")
