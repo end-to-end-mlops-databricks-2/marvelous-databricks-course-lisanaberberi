@@ -17,7 +17,7 @@ mlflow.set_registry_uri("databricks-uc")
 # mlflow.set_tracking_uri("databricks://course")
 # mlflow.set_registry_uri("databricks-uc://course")
 
-config = ProjectConfig.from_yaml(config_path="../project_config.yml")
+config = ProjectConfig.from_yaml(config_path="../project_config.yaml")
 spark = SparkSession.builder.getOrCreate()
 tags = Tags(**{"git_sha": "abcd12345", "branch": "week2"})
 
