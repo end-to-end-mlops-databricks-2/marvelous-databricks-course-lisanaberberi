@@ -6,7 +6,7 @@ from loguru import logger
 from pyspark.sql import SparkSession
 
 from house_price.config import ProjectConfig, Tags
-from house_price.feature_lookup_model import FeatureLookUpModel
+from house_price.models.feature_lookup_model import FeatureLookUpModel
 
 # Configure tracking uri
 mlflow.set_tracking_uri("databricks")
