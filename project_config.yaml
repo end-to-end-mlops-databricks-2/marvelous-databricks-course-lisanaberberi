@@ -3,6 +3,7 @@ schema_name: lisanabe
 
 experiment_name_basic:  /Shared/house-prices-basic
 experiment_name_custom: /Shared/house-prices-custom-lb
+experiment_name_fe: /Shared/house-prices-fe
 
 parameters:
   learning_rate: 0.01
