@@ -30,7 +30,7 @@ os.environ["DBR_HOST"] = spark.conf.get("spark.databricks.workspaceUrl")
 config = ProjectConfig.from_yaml(config_path="../project_config.yaml")
 catalog_name = config.catalog_name
 schema_name = config.schema_name
-endpoint_name = "house-prices-model-serving-fe"
+endpoint_name = "house-prices-model-serving-fe-1"
 
 # COMMAND ----------
 # Initialize Feature Lookup Serving Manager
@@ -91,7 +91,7 @@ logger.info(dataframe_records[0])
 
 # COMMAND ----------
 # Call the endpoint with one sample record
-def call_endpoint(self, record: List(Dict)):
+def call_endpoint(endpoint_name: str, record: List[Dict]):
     """
     Calls the model serving endpoint with a given input record.
     """
@@ -104,8 +104,9 @@ def call_endpoint(self, record: List(Dict)):
     )
     return response.status_code, response.text
 
-
-status_code, response_text = call_endpoint(dataframe_records[0])
+# Call the endpoint with one sample record
+endpoint_name = model_serving.endpoint_name
+status_code, response_text = call_endpoint(endpoint_name, dataframe_records[0])
 print(f"Response Status: {status_code}")
 print(f"Response Text: {response_text}")
 
