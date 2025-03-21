@@ -1,16 +1,34 @@
-import logging
+import argparse
 
 import yaml
+from loguru import logger
 from pyspark.sql import SparkSession
 
 from house_price.config import ProjectConfig
-from house_price.data_processor import DataProcessor
+from house_price.data_processor import DataProcessor, generate_synthetic_data
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
-logger = logging.getLogger(__name__)
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "--root_path",
+    action="store",
+    default=None,
+    type=str,
+    required=True,
+)
 
-config = ProjectConfig.from_yaml(config_path="../project_config.yaml")
+parser.add_argument(
+    "--env",
+    action="store",
+    default=None,
+    type=str,
+    required=True,
+)
+
+args = parser.parse_args()
+root_path = args.root_path
+config_path = f"{root_path}/files/project_config.yml"
+
+config = ProjectConfig.from_yaml(config_path=config_path, env=args.env)
 
 logger.info("Configuration loaded:")
 logger.info(yaml.dump(config, default_flow_style=False))
@@ -22,8 +40,14 @@ df = spark.read.csv(
     f"/Volumes/{config.catalog_name}/{config.schema_name}/data/data.csv", header=True, inferSchema=True
 ).toPandas()
 
+# Generate synthetic data
+### This is mimicking a new data arrival. In real world, this would be a new batch of data.
+# df is passed to infer schema
+synthetic_df = generate_synthetic_data(df, num_rows=100)
+logger.info("Synthetic data generated.")
+
 # Initialize DataProcessor
-data_processor = DataProcessor(df, config, spark)
+data_processor = DataProcessor(synthetic_df, config, spark)
 
 # Preprocess the data
 data_processor.preprocess()
