@@ -1,5 +1,19 @@
-catalog_name: mlops_dev
-schema_name: lisanabe
+prd:
+  catalog_name: mlops_dev
+  schema_name: house_prices
+  pipeline_id: 1818db79-f551-49bb-ad4f-f61cac9d91fc
+acc:
+  catalog_name: mlops_acc
+  schema_name: house_prices
+  pipeline_id: 94748db79-f551-49bb-ad4f-f61cac9d91fc
+dev:
+  catalog_name: mlops_prod
+  schema_name: house_prices
+  pipeline_id: 0498db79-f551-49bb-ad4f-finac9d91fc
+
+
+# catalog_name: mlops_dev
+# schema_name: lisanabe
 
 experiment_name_basic:  /Shared/house-prices-basic
 experiment_name_custom: /Shared/house-prices-custom-lb
