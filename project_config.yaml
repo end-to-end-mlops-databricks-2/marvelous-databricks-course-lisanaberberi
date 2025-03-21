@@ -10,6 +10,16 @@ parameters:
   n_estimators: 100
   max_depth: 6
 
+parameters_a:
+  learning_rate: 0.01
+  n_estimators: 1000
+  max_depth: 6
+
+parameters_b:
+  learning_rate: 0.02
+  n_estimators: 1000
+  max_depth: 5
+
 num_features:
   - LotFrontage
   - LotArea
