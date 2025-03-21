@@ -105,7 +105,7 @@ def call_endpoint(endpoint_name: str, record: List[Dict]):
     return response.status_code, response.text
 
 # Call the endpoint with one sample record
-endpoint_name = model_serving.endpoint_name
+endpoint_name = feature_model_server.endpoint_name
 status_code, response_text = call_endpoint(endpoint_name, dataframe_records[0])
 print(f"Response Status: {status_code}")
 print(f"Response Text: {response_text}")
