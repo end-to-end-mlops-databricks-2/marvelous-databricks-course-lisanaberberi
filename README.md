@@ -32,3 +32,57 @@ source venv/bin/activate
 uv pip install -r pyproject.toml --all-extras
 uv lock
 ```
+
+
+📊 Weekly Development Progress
+Week 1: Data Preparation
+✨ Key Features:
+
+Comprehensive DataProcessor class for house price dataset preparation
+
+## Weekly Development Progress
+
+### Week 1: Data Preparation and Preprocessing
+
+* Key Features:
+
+- Comprehensive DataProcessor class for house price dataset preparation
+- - The DataProcessor class handles all aspects of preparing house price data for machine learning:
+
+Initialization: Takes a pandas DataFrame, configuration object, and SparkSession
+Preprocessing: Handles missing values, data type conversion, and feature selection
+Data Splitting: Divides data into training and test sets
+Catalog Integration: Saves processed data to Databricks tables with timestamps
+Delta Lake Features: Enables Change Data Feed for data versioning
+
+Key Methods
+
+preprocess()
+
+Converts numeric columns using pd.to_numeric()
+Handles missing values in "LotFrontage" and "GarageYrBlt"
+Creates derived feature "GarageAge" from "GarageYrBlt"
+Fills missing values with appropriate defaults
+Converts categorical features to category type
+Selects only relevant columns based on configuration
+
+
+split_data()
+
+Divides processed data into training and test sets
+Configurable test size and random state parameters
+Returns separate pandas DataFrames for train and test
+
+
+save_to_catalog()
+
+Converts pandas DataFrames to Spark DataFrames
+Adds UTC timestamps for tracking when data was processed
+Writes data to Delta tables in the configured catalog and schema
+Uses append mode to maintain historical data
+
+
+enable_change_data_feed()
+
+Enables Delta Lake's Change Data Feed feature on train and test tables
+Supports advanced data versioning and change tracking capabilities
