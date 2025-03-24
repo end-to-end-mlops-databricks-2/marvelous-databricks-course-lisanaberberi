@@ -35,7 +35,7 @@ uv lock
 
 ## C4 model architecture for managing House Price Prediction ML lifecycle
 
-![C4 system context](images/1-1.svg)
+![C4 system context](images/system-context-diagram-1.svg)
 
 ## 📊 Weekly Development Progress
 
