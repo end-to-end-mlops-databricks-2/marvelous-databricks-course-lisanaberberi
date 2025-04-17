@@ -36,8 +36,11 @@ build-backend = "setuptools.build_meta"
 where =["src"]
 include = ["house_price*"]
 
-[tool.ruff.lint]
+[tool.ruff]
+# Global Ruff settings
 line-length = 120
+
+[tool.ruff.lint]
 select = [
     "F",  # pyflakes rules
     "E",  # pycodestyle error rules
