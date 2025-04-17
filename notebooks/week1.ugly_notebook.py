@@ -34,9 +34,9 @@ spark = SparkSession.builder.getOrCreate()
 
 # Only works in a Databricks environment if the data is there
 # to put data there, create volume and run databricks fs cp <path> dbfs:/Volumes/mlops_dev/<schema_name>/<volume_name>/
-# filepath = f"/Volumes/{catalog_name}/{schema_name}/data/data.csv"
-# Load the data
-# df = pd.read_csv(filepath)
+filepath = f"/Volumes/{catalog_name}/{schema_name}/data/data.csv"
+#Load the data
+df = pd.read_csv(filepath)
 
 # Works both locally and in a Databricks environment
 # filepath = "../data/data.csv"
