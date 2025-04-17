@@ -16,7 +16,9 @@ from house_price.config import ProjectConfig
 from house_price.data_processor import DataProcessor
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 config = ProjectConfig.from_yaml(config_path="../project_config.yaml")
@@ -30,7 +32,9 @@ logger.info(yaml.dump(config, default_flow_style=False))
 spark = SparkSession.builder.getOrCreate()
 
 df = spark.read.csv(
-    f"/Volumes/{config.catalog_name}/{config.schema_name}/data/data.csv", header=True, inferSchema=True
+    f"/Volumes/{config.catalog_name}/{config.schema_name}/data/data.csv",
+    header=True,
+    inferSchema=True,
 ).toPandas()
 
 # COMMAND ----------

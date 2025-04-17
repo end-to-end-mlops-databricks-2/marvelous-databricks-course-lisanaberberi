@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %pip uninstall -y house-price
-# MAGIC %pip install file:///Volumes/mlops_dev/lisanabe/packages/house_price-0.0.1-py3-none-any.whl 
+# MAGIC %pip install file:///Volumes/mlops_dev/lisanabe/packages/house_price-0.0.1-py3-none-any.whl
 
 # COMMAND ----------
 # MAGIC %restart_python
@@ -23,7 +23,9 @@ spark = SparkSession.builder.getOrCreate()
 dbutils = DBUtils(spark)
 
 # get environment variables
-os.environ["DBR_TOKEN"] = dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get()
+os.environ["DBR_TOKEN"] = (
+    dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get()
+)
 os.environ["DBR_HOST"] = spark.conf.get("spark.databricks.workspaceUrl")
 
 # Load project config
@@ -34,7 +36,8 @@ schema_name = config.schema_name
 # COMMAND ----------
 # Initialize feature store manager
 model_serving = ModelServing(
-    model_name=f"{catalog_name}.{schema_name}.house_prices_model_basic", endpoint_name="house-prices-model-serving"
+    model_name=f"{catalog_name}.{schema_name}.house_prices_model_basic",
+    endpoint_name="house-prices-model-serving",
 )
 
 # COMMAND ----------
@@ -76,10 +79,14 @@ required_columns = [
 ]
 
 # Sample 1000 records from the training set
-test_set = spark.table(f"{config.catalog_name}.{config.schema_name}.test_set").toPandas()
+test_set = spark.table(
+    f"{config.catalog_name}.{config.schema_name}.test_set"
+).toPandas()
 
 # Sample 100 records from the training set
-sampled_records = test_set[required_columns].sample(n=100, replace=True).to_dict(orient="records")
+sampled_records = (
+    test_set[required_columns].sample(n=100, replace=True).to_dict(orient="records")
+)
 dataframe_records = [[record] for record in sampled_records]
 
 # COMMAND ----------
@@ -103,6 +110,7 @@ Each dataframe record in the request body should be list of json with columns lo
   'SaleCondition': 'Normal'}]
 """
 
+
 def call_endpoint(endpoint_name: str, record: List[Dict]):
     """
     Calls the model serving endpoint with a given input record.
@@ -115,6 +123,7 @@ def call_endpoint(endpoint_name: str, record: List[Dict]):
         json={"dataframe_records": record},
     )
     return response.status_code, response.text
+
 
 # Call the endpoint with one sample record
 endpoint_name = model_serving.endpoint_name

@@ -4,16 +4,17 @@ import time
 import numpy as np
 import pandas as pd
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import current_timestamp, to_utc_timestamp
+from pyspark.sql.functions import col, current_timestamp, to_utc_timestamp
+from pyspark.sql.types import IntegerType
 from sklearn.model_selection import train_test_split
 
 from house_price.config import ProjectConfig
-from pyspark.sql.functions import col
-from pyspark.sql.types import IntegerType, LongType
 
 
 class DataProcessor:
-    def __init__(self, pandas_df: pd.DataFrame, config: ProjectConfig, spark: SparkSession):
+    def __init__(
+        self, pandas_df: pd.DataFrame, config: ProjectConfig, spark: SparkSession
+    ):
         self.df = pandas_df  # Store the DataFrame as self.df
         self.config = config  # Store the configuration
         self.spark = spark
@@ -59,35 +60,38 @@ class DataProcessor:
 
     def split_data(self, test_size=0.2, random_state=42):
         """Split the DataFrame (self.df) into training and test sets."""
-        train_set, test_set = train_test_split(self.df, test_size=test_size, random_state=random_state)
+        train_set, test_set = train_test_split(
+            self.df, test_size=test_size, random_state=random_state
+        )
         return train_set, test_set
-
 
     def resolve_schema_conflicts(self, df):
         """
         Resolve potential schema conflicts, especially for YearBuilt column
-        
+
         Args:
             df (pyspark.sql.DataFrame): Input DataFrame
-        
+
         Returns:
             pyspark.sql.DataFrame: DataFrame with resolved schema
         """
         # Ensure YearBuilt is consistently typed
         df = df.withColumn("YearBuilt", col("YearBuilt").cast(IntegerType()))
-        
+
         # Optionally, drop duplicate columns if they exist
         df = df.select(*set(df.columns))
-        
+
         return df
 
     # Usage in your save_to_catalog method
     def save_to_catalog(self, train_set: pd.DataFrame, test_set: pd.DataFrame):
         """Save the train and test sets into Databricks tables."""
         # Convert pandas to Spark DataFrame and resolve schema
-        train_spark = self.resolve_schema_conflicts(self.spark.createDataFrame(train_set))
+        train_spark = self.resolve_schema_conflicts(
+            self.spark.createDataFrame(train_set)
+        )
         test_spark = self.resolve_schema_conflicts(self.spark.createDataFrame(test_set))
-        
+
         # Add timestamp column
         train_set_with_timestamp = train_spark.withColumn(
             "update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC")
@@ -95,17 +99,19 @@ class DataProcessor:
         test_set_with_timestamp = test_spark.withColumn(
             "update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC")
         )
-        
+
         # Save with merge schema option
-        train_set_with_timestamp.write.format("delta") \
-            .option("mergeSchema", "true") \
-            .mode("overwrite") \
-            .saveAsTable(f"{self.config.catalog_name}.{self.config.schema_name}.train_set")
-        
-        test_set_with_timestamp.write.format("delta") \
-            .option("mergeSchema", "true") \
-            .mode("overwrite") \
-            .saveAsTable(f"{self.config.catalog_name}.{self.config.schema_name}.test_set")
+        train_set_with_timestamp.write.format("delta").option(
+            "mergeSchema", "true"
+        ).mode("overwrite").saveAsTable(
+            f"{self.config.catalog_name}.{self.config.schema_name}.train_set"
+        )
+
+        test_set_with_timestamp.write.format("delta").option(
+            "mergeSchema", "true"
+        ).mode("overwrite").saveAsTable(
+            f"{self.config.catalog_name}.{self.config.schema_name}.test_set"
+        )
 
     def enable_change_data_feed(self):
         self.spark.sql(
@@ -117,7 +123,7 @@ class DataProcessor:
             f"ALTER TABLE {self.config.catalog_name}.{self.config.schema_name}.test_set "
             "SET TBLPROPERTIES (delta.enableChangeDataFeed = true);"
         )
-    
+
 
 def generate_synthetic_data(df, drift: False, num_rows=10):
     """Generates synthetic data based on the distribution of the input DataFrame."""
@@ -128,15 +134,26 @@ def generate_synthetic_data(df, drift: False, num_rows=10):
             continue
 
         if pd.api.types.is_numeric_dtype(df[column]):
-            if column in {"YearBuilt", "YearRemodAdd"}:  # Handle year-based columns separately
-                synthetic_data[column] = np.random.randint(df[column].min(), df[column].max() + 1, num_rows)
+            if column in {
+                "YearBuilt",
+                "YearRemodAdd",
+            }:  # Handle year-based columns separately
+                synthetic_data[column] = np.random.randint(
+                    df[column].min(), df[column].max() + 1, num_rows
+                )
             else:
-                synthetic_data[column] = np.random.normal(df[column].mean(), df[column].std(), num_rows)
-            
-                if column == "SalePrice":
-                    synthetic_data[column] = np.maximum(0, synthetic_data[column])  # Ensure values are non-negative
+                synthetic_data[column] = np.random.normal(
+                    df[column].mean(), df[column].std(), num_rows
+                )
 
-        elif pd.api.types.is_categorical_dtype(df[column]) or pd.api.types.is_object_dtype(df[column]):
+                if column == "SalePrice":
+                    synthetic_data[column] = np.maximum(
+                        0, synthetic_data[column]
+                    )  # Ensure values are non-negative
+
+        elif pd.api.types.is_categorical_dtype(
+            df[column]
+        ) or pd.api.types.is_object_dtype(df[column]):
             synthetic_data[column] = np.random.choice(
                 df[column].unique(), num_rows, p=df[column].value_counts(normalize=True)
             )
@@ -170,7 +187,9 @@ def generate_synthetic_data(df, drift: False, num_rows=10):
     # Only process columns if they exist in synthetic_data
     for column in ["LotFrontage", "MasVnrArea", "GarageYrBlt"]:
         if column in synthetic_data.columns:
-            synthetic_data[column] = pd.to_numeric(synthetic_data[column], errors="coerce")
+            synthetic_data[column] = pd.to_numeric(
+                synthetic_data[column], errors="coerce"
+            )
             synthetic_data[column] = synthetic_data[column].astype(np.float64)
 
     timestamp_base = int(time.time() * 1000)
@@ -185,8 +204,9 @@ def generate_synthetic_data(df, drift: False, num_rows=10):
 
         # Set YearBuilt to within the last 2 years
         current_year = pd.Timestamp.now().year
-        if 'YearBuilt' in synthetic_data.columns:
-            synthetic_data['YearBuilt'] = np.random.randint(current_year - 2, current_year + 1, num_rows)
-
+        if "YearBuilt" in synthetic_data.columns:
+            synthetic_data["YearBuilt"] = np.random.randint(
+                current_year - 2, current_year + 1, num_rows
+            )
 
     return synthetic_data

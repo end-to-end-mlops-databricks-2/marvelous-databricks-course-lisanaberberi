@@ -30,7 +30,9 @@ mlflow.set_registry_uri("databricks-uc")
 
 # COMMAND ----------
 # get environment variables
-os.environ["DBR_TOKEN"] = dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get()
+os.environ["DBR_TOKEN"] = (
+    dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get()
+)
 os.environ["DBR_HOST"] = spark.conf.get("spark.databricks.workspaceUrl")
 
 # COMMAND ----------
@@ -47,15 +49,22 @@ train_set = spark.table(f"{catalog_name}.{schema_name}.train_set").toPandas()
 test_set = spark.table(f"{catalog_name}.{schema_name}.test_set").toPandas()
 df = pd.concat([train_set, test_set])
 
-model = mlflow.sklearn.load_model(f"models:/{catalog_name}.{schema_name}.house_prices_model_basic@latest-model")
+model = mlflow.sklearn.load_model(
+    f"models:/{catalog_name}.{schema_name}.house_prices_model_basic@latest-model"
+)
 
 
 preds_df = df[["Id", "GrLivArea", "YearBuilt"]]
-preds_df["Predicted_SalePrice"] = model.predict(df[config.cat_features + config.num_features])
+preds_df["Predicted_SalePrice"] = model.predict(
+    df[config.cat_features + config.num_features]
+)
 preds_df = spark.createDataFrame(preds_df)
 
 fe.create_table(
-    name=feature_table_name, primary_keys=["Id"], df=preds_df, description="House Prices predictions feature table"
+    name=feature_table_name,
+    primary_keys=["Id"],
+    df=preds_df,
+    description="House Prices predictions feature table",
 )
 
 spark.sql(f"""
@@ -65,7 +74,9 @@ spark.sql(f"""
 
 # Initialize feature store manager
 feature_serving = FeatureServing(
-    feature_table_name=feature_table_name, feature_spec_name=feature_spec_name, endpoint_name=endpoint_name
+    feature_table_name=feature_table_name,
+    feature_spec_name=feature_spec_name,
+    endpoint_name=endpoint_name,
 )
 
 
@@ -84,7 +95,9 @@ feature_serving.deploy_or_update_serving_endpoint()
 # COMMAND ----------
 
 start_time = time.time()
-serving_endpoint = f"https://{os.environ['DBR_HOST']}/serving-endpoints/{endpoint_name}/invocations"
+serving_endpoint = (
+    f"https://{os.environ['DBR_HOST']}/serving-endpoints/{endpoint_name}/invocations"
+)
 response = requests.post(
     f"{serving_endpoint}",
     headers={"Authorization": f"Bearer {os.environ['DBR_TOKEN']}"},

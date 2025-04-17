@@ -1,6 +1,6 @@
 # Databricks notebook source
-#%pip uninstall -y house-price
-#%pip install file:///Volumes/mlops_dev/lisanabe/packages/house_price-0.0.1-py3-none-any.whl 
+# %pip uninstall -y house-price
+# %pip install file:///Volumes/mlops_dev/lisanabe/packages/house_price-0.0.1-py3-none-any.whl
 
 import hashlib
 
@@ -81,7 +81,9 @@ X_test = test_set[config.num_features + config.cat_features + ["Id"]]
 
 # COMMAND ----------
 models = [model_A, model_B]
-wrapped_model = HousePriceModelWrapper(models)  # we pass the loaded models to the wrapper
+wrapped_model = HousePriceModelWrapper(
+    models
+)  # we pass the loaded models to the wrapper
 example_input = X_test.iloc[0:1]  # Select the first row for prediction as example
 example_prediction = wrapped_model.predict(context=None, model_input=example_input)
 print("Example Prediction:", example_prediction)
@@ -92,14 +94,24 @@ model_name = f"{catalog_name}.{schema_name}.house_prices_model_pyfunc_ab_test-1"
 
 with mlflow.start_run() as run:
     run_id = run.info.run_id
-    signature = infer_signature(model_input=X_train, model_output={"Prediction": 1234.5, "model": "Model B"})
-    dataset = mlflow.data.from_spark(train_set_spark, table_name=f"{catalog_name}.{schema_name}.train_set", version="0")
+    signature = infer_signature(
+        model_input=X_train, model_output={"Prediction": 1234.5, "model": "Model B"}
+    )
+    dataset = mlflow.data.from_spark(
+        train_set_spark,
+        table_name=f"{catalog_name}.{schema_name}.train_set",
+        version="0",
+    )
     mlflow.log_input(dataset, context="training")
     mlflow.pyfunc.log_model(
-        python_model=wrapped_model, artifact_path="pyfunc-house-price-model-ab", signature=signature
+        python_model=wrapped_model,
+        artifact_path="pyfunc-house-price-model-ab",
+        signature=signature,
     )
 model_version = mlflow.register_model(
-    model_uri=f"runs:/{run_id}/pyfunc-house-price-model-ab", name=model_name, tags=tags.dict()
+    model_uri=f"runs:/{run_id}/pyfunc-house-price-model-ab",
+    name=model_name,
+    tags=tags.dict(),
 )
 
 # COMMAND ----------

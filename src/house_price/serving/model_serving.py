@@ -17,12 +17,17 @@ class ModelServing:
 
     def get_latest_model_version(self):
         client = mlflow.MlflowClient()
-        latest_version = client.get_model_version_by_alias(self.model_name, alias="latest-model").version
+        latest_version = client.get_model_version_by_alias(
+            self.model_name, alias="latest-model"
+        ).version
         print(f"Latest model version: {latest_version}")
         return latest_version
 
     def deploy_or_update_serving_endpoint(
-        self, version: str = "latest", workload_size: str = "Small", scale_to_zero: bool = True
+        self,
+        version: str = "latest",
+        workload_size: str = "Small",
+        scale_to_zero: bool = True,
     ):
         """
         Deploys the model serving endpoint in Databricks.
@@ -30,7 +35,10 @@ class ModelServing:
         :param workload_seze: str. Workload size (number of concurrent requests). Default is Small = 4 concurrent requests
         :param scale_to_zero: bool. If True, endpoint scales to 0 when unused.
         """
-        endpoint_exists = any(item.name == self.endpoint_name for item in self.workspace.serving_endpoints.list())
+        endpoint_exists = any(
+            item.name == self.endpoint_name
+            for item in self.workspace.serving_endpoints.list()
+        )
         if version == "latest":
             entity_version = self.get_latest_model_version()
         else:
@@ -53,4 +61,6 @@ class ModelServing:
                 ),
             )
         else:
-            self.workspace.serving_endpoints.update_config(name=self.endpoint_name, served_entities=served_entities)
+            self.workspace.serving_endpoints.update_config(
+                name=self.endpoint_name, served_entities=served_entities
+            )

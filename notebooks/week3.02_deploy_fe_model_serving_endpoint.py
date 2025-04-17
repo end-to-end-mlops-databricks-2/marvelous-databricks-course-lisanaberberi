@@ -23,7 +23,9 @@ spark = SparkSession.builder.getOrCreate()
 dbutils = DBUtils(spark)
 
 # get environment variables
-os.environ["DBR_TOKEN"] = dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get()
+os.environ["DBR_TOKEN"] = (
+    dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get()
+)
 os.environ["DBR_HOST"] = spark.conf.get("spark.databricks.workspaceUrl")
 
 # Load project config
@@ -81,8 +83,12 @@ required_columns = [
 
 spark = SparkSession.builder.getOrCreate()
 
-train_set = spark.table(f"{config.catalog_name}.{config.schema_name}.train_set").toPandas()
-sampled_records = train_set[required_columns].sample(n=1000, replace=True).to_dict(orient="records")
+train_set = spark.table(
+    f"{config.catalog_name}.{config.schema_name}.train_set"
+).toPandas()
+sampled_records = (
+    train_set[required_columns].sample(n=1000, replace=True).to_dict(orient="records")
+)
 dataframe_records = [[record] for record in sampled_records]
 
 logger.info(train_set.dtypes)
@@ -103,6 +109,7 @@ def call_endpoint(endpoint_name: str, record: List[Dict]):
         json={"dataframe_records": record},
     )
     return response.status_code, response.text
+
 
 # Call the endpoint with one sample record
 endpoint_name = feature_model_server.endpoint_name

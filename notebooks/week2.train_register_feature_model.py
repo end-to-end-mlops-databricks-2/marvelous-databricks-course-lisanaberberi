@@ -1,6 +1,6 @@
 # Databricks notebook source
-#%pip uninstall -y house-price
-#%pip install file:///Volumes/mlops_dev/lisanabe/packages/house_price-0.0.1-py3-none-any.whl 
+# %pip uninstall -y house-price
+# %pip install file:///Volumes/mlops_dev/lisanabe/packages/house_price-0.0.1-py3-none-any.whl
 import mlflow
 from loguru import logger
 from pyspark.sql import SparkSession
@@ -17,7 +17,7 @@ spark = SparkSession.builder.getOrCreate()
 tags_dict = {"git_sha": "abcd12345", "branch": "week2"}
 tags = Tags(**tags_dict)
 
-#config = ProjectConfig.from_yaml(config_path="/Volumes/mlops_prod/house_prices/data/project_config.yml")
+# config = ProjectConfig.from_yaml(config_path="/Volumes/mlops_prod/house_prices/data/project_config.yml")
 
 
 # COMMAND ----------

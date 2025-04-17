@@ -35,7 +35,7 @@ spark = SparkSession.builder.getOrCreate()
 # Only works in a Databricks environment if the data is there
 # to put data there, create volume and run databricks fs cp <path> dbfs:/Volumes/mlops_dev/<schema_name>/<volume_name>/
 filepath = f"/Volumes/{catalog_name}/{schema_name}/data/data.csv"
-#Load the data
+# Load the data
 df = pd.read_csv(filepath)
 
 # Works both locally and in a Databricks environment
@@ -103,16 +103,22 @@ test_set_with_timestamp = spark.createDataFrame(test_set).withColumn(
     "update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC")
 )
 
-train_set_with_timestamp.write.mode("append").saveAsTable(f"{catalog_name}.{schema_name}.train_set")
+train_set_with_timestamp.write.mode("append").saveAsTable(
+    f"{catalog_name}.{schema_name}.train_set"
+)
 
-test_set_with_timestamp.write.mode("append").saveAsTable(f"{catalog_name}.{schema_name}.test_set")
-
-spark.sql(
-    f"ALTER TABLE {catalog_name}.{schema_name}.train_set " "SET TBLPROPERTIES (delta.enableChangeDataFeed = true);"
+test_set_with_timestamp.write.mode("append").saveAsTable(
+    f"{catalog_name}.{schema_name}.test_set"
 )
 
 spark.sql(
-    f"ALTER TABLE {catalog_name}.{schema_name}.test_set " "SET TBLPROPERTIES (delta.enableChangeDataFeed = true);"
+    f"ALTER TABLE {catalog_name}.{schema_name}.train_set "
+    "SET TBLPROPERTIES (delta.enableChangeDataFeed = true);"
+)
+
+spark.sql(
+    f"ALTER TABLE {catalog_name}.{schema_name}.test_set "
+    "SET TBLPROPERTIES (delta.enableChangeDataFeed = true);"
 )
 
 # COMMAND ----------

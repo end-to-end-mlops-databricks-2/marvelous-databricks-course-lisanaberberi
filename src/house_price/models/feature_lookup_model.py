@@ -37,8 +37,12 @@ class FeatureLookUpModel:
         self.schema_name = self.config.schema_name
 
         # Define table names and function name
-        self.feature_table_name = f"{self.catalog_name}.{self.schema_name}.house_features"
-        self.function_name = f"{self.catalog_name}.{self.schema_name}.calculate_house_age"
+        self.feature_table_name = (
+            f"{self.catalog_name}.{self.schema_name}.house_features"
+        )
+        self.function_name = (
+            f"{self.catalog_name}.{self.schema_name}.calculate_house_age"
+        )
 
         # MLflow configuration
         self.experiment_name = self.config.experiment_name_fe
@@ -53,8 +57,12 @@ class FeatureLookUpModel:
         CREATE OR REPLACE TABLE {self.feature_table_name}
         (Id STRING NOT NULL, OverallQual INT, GrLivArea INT, GarageCars INT);
         """)
-        self.spark.sql(f"ALTER TABLE {self.feature_table_name} ADD CONSTRAINT house_pk PRIMARY KEY(Id);")
-        self.spark.sql(f"ALTER TABLE {self.feature_table_name} SET TBLPROPERTIES (delta.enableChangeDataFeed = true);")
+        self.spark.sql(
+            f"ALTER TABLE {self.feature_table_name} ADD CONSTRAINT house_pk PRIMARY KEY(Id);"
+        )
+        self.spark.sql(
+            f"ALTER TABLE {self.feature_table_name} SET TBLPROPERTIES (delta.enableChangeDataFeed = true);"
+        )
 
         self.spark.sql(
             f"INSERT INTO {self.feature_table_name} SELECT Id, OverallQual, GrLivArea, GarageCars FROM {self.catalog_name}.{self.schema_name}.train_set"
@@ -83,13 +91,19 @@ class FeatureLookUpModel:
         """
         Load training and testing data from Delta tables.
         """
-        self.train_set = self.spark.table(f"{self.catalog_name}.{self.schema_name}.train_set").drop(
-            "OverallQual", "GrLivArea", "GarageCars"
-        )
-        self.test_set = self.spark.table(f"{self.catalog_name}.{self.schema_name}.test_set").toPandas()
+        self.train_set = self.spark.table(
+            f"{self.catalog_name}.{self.schema_name}.train_set"
+        ).drop("OverallQual", "GrLivArea", "GarageCars")
+        self.test_set = self.spark.table(
+            f"{self.catalog_name}.{self.schema_name}.test_set"
+        ).toPandas()
 
-        self.train_set = self.train_set.withColumn("YearBuilt", self.train_set["YearBuilt"].cast("int"))
-        self.train_set = self.train_set.withColumn("Id", self.train_set["Id"].cast("string"))
+        self.train_set = self.train_set.withColumn(
+            "YearBuilt", self.train_set["YearBuilt"].cast("int")
+        )
+        self.train_set = self.train_set.withColumn(
+            "Id", self.train_set["Id"].cast("string")
+        )
 
         logger.info("✅ Data successfully loaded.")
 
@@ -119,9 +133,13 @@ class FeatureLookUpModel:
         current_year = datetime.now().year
         self.test_set["house_age"] = current_year - self.test_set["YearBuilt"]
 
-        self.X_train = self.training_df[self.num_features + self.cat_features + ["house_age"]]
+        self.X_train = self.training_df[
+            self.num_features + self.cat_features + ["house_age"]
+        ]
         self.y_train = self.training_df[self.target]
-        self.X_test = self.test_set[self.num_features + self.cat_features + ["house_age"]]
+        self.X_test = self.test_set[
+            self.num_features + self.cat_features + ["house_age"]
+        ]
         self.y_test = self.test_set[self.target]
 
         logger.info("✅ Feature engineering completed.")
@@ -133,10 +151,18 @@ class FeatureLookUpModel:
         logger.info("🚀 Starting training...")
 
         preprocessor = ColumnTransformer(
-            transformers=[("cat", OneHotEncoder(handle_unknown="ignore"), self.cat_features)], remainder="passthrough"
+            transformers=[
+                ("cat", OneHotEncoder(handle_unknown="ignore"), self.cat_features)
+            ],
+            remainder="passthrough",
         )
 
-        pipeline = Pipeline(steps=[("preprocessor", preprocessor), ("regressor", LGBMRegressor(**self.parameters))])
+        pipeline = Pipeline(
+            steps=[
+                ("preprocessor", preprocessor),
+                ("regressor", LGBMRegressor(**self.parameters)),
+            ]
+        )
 
         mlflow.set_experiment(self.experiment_name)
 
@@ -234,25 +260,31 @@ class FeatureLookUpModel:
         """
         X_test = test_set.drop(self.config.target)
 
-        predictions_latest = self.load_latest_model_and_predict(X_test).withColumnRenamed(
-            "prediction", "prediction_latest"
-        )
+        predictions_latest = self.load_latest_model_and_predict(
+            X_test
+        ).withColumnRenamed("prediction", "prediction_latest")
 
         current_model_uri = f"runs:/{self.run_id}/lightgbm-pipeline-model-fe"
-        predictions_current = self.fe.score_batch(model_uri=current_model_uri, df=X_test).withColumnRenamed(
-            "prediction", "prediction_current"
-        )
+        predictions_current = self.fe.score_batch(
+            model_uri=current_model_uri, df=X_test
+        ).withColumnRenamed("prediction", "prediction_current")
 
         test_set = test_set.select("Id", "SalePrice")
 
         logger.info("Predictions are ready.")
 
         # Join the DataFrames on the 'id' column
-        df = test_set.join(predictions_current, on="Id").join(predictions_latest, on="Id")
+        df = test_set.join(predictions_current, on="Id").join(
+            predictions_latest, on="Id"
+        )
 
         # Calculate the absolute error for each model
-        df = df.withColumn("error_current", F.abs(df["SalePrice"] - df["prediction_current"]))
-        df = df.withColumn("error_latest", F.abs(df["SalePrice"] - df["prediction_latest"]))
+        df = df.withColumn(
+            "error_current", F.abs(df["SalePrice"] - df["prediction_current"])
+        )
+        df = df.withColumn(
+            "error_latest", F.abs(df["SalePrice"] - df["prediction_latest"])
+        )
 
         # Calculate the Mean Absolute Error (MAE) for each model
         mae_current = df.agg(F.mean("error_current")).collect()[0][0]

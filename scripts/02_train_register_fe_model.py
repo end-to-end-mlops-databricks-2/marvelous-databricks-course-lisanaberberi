@@ -61,7 +61,11 @@ config_path = f"{root_path}/files/project_config.yaml"
 config = ProjectConfig.from_yaml(config_path=config_path, env=args.env)
 spark = SparkSession.builder.getOrCreate()
 dbutils = DBUtils(spark)
-tags_dict = {"git_sha": args.git_sha, "branch": args.branch, "job_run_id": args.job_run_id}
+tags_dict = {
+    "git_sha": args.git_sha,
+    "branch": args.branch,
+    "job_run_id": args.job_run_id,
+}
 tags = Tags(**tags_dict)
 
 # Initialize model
@@ -91,7 +95,9 @@ logger.info("Model training completed.")
 # Evaluate model
 # Load test set from Delta table
 spark = SparkSession.builder.getOrCreate()
-test_set = spark.table(f"{config.catalog_name}.{config.schema_name}.test_set").limit(100)
+test_set = spark.table(f"{config.catalog_name}.{config.schema_name}.test_set").limit(
+    100
+)
 # Drop feature lookup columns and target
 test_set = test_set.drop("OverallQual", "GrLivArea", "GarageCars")
 

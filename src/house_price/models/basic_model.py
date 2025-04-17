@@ -1,3 +1,4 @@
+import lightgbm as lgb
 import mlflow
 import pandas as pd
 from lightgbm import LGBMRegressor
@@ -9,9 +10,6 @@ from sklearn.compose import ColumnTransformer
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder
-from lightgbm import callback as lgb_callback
-
-import lightgbm as lgb
 
 from house_price.config import ProjectConfig, Tags
 
@@ -44,7 +42,9 @@ class BasicModel:
         self.catalog_name = self.config.catalog_name
         self.schema_name = self.config.schema_name
         self.experiment_name = self.config.experiment_name_basic
-        self.model_name = f"{self.catalog_name}.{self.schema_name}.house_prices_model_basic"
+        self.model_name = (
+            f"{self.catalog_name}.{self.schema_name}.house_prices_model_basic"
+        )
         self.tags = tags.dict()
         self.run_id = None
 
@@ -56,9 +56,13 @@ class BasicModel:
         Target (y_train, y_test)
         """
         logger.info("🔄 Loading data from Databricks tables...")
-        self.train_set_spark = self.spark.table(f"{self.catalog_name}.{self.schema_name}.train_set")
+        self.train_set_spark = self.spark.table(
+            f"{self.catalog_name}.{self.schema_name}.train_set"
+        )
         self.train_set = self.train_set_spark.toPandas()
-        self.test_set = self.spark.table(f"{self.catalog_name}.{self.schema_name}.test_set").toPandas()
+        self.test_set = self.spark.table(
+            f"{self.catalog_name}.{self.schema_name}.test_set"
+        ).toPandas()
         self.data_version = "0"  # describe history -> retrieve
 
         self.X_train = self.train_set[self.num_features + self.cat_features]
@@ -77,16 +81,18 @@ class BasicModel:
         """
         logger.info("🔄 Defining preprocessing pipeline...")
         self.preprocessor = ColumnTransformer(
-            transformers=[("cat", OneHotEncoder(handle_unknown="ignore"), self.cat_features)], remainder="passthrough"
+            transformers=[
+                ("cat", OneHotEncoder(handle_unknown="ignore"), self.cat_features)
+            ],
+            remainder="passthrough",
         )
-        
+
         # Create a custom LGBMRegressor without fitting in the pipeline
         self.lgbm_model = LGBMRegressor(**self.parameters)
-        
+
         # Create a pipeline with just the preprocessor
         self.pipeline = Pipeline(steps=[("preprocessor", self.preprocessor)])
         logger.info("✅ Preprocessing pipeline defined.")
-
 
     def log_evaluation(self, env):
         """
@@ -99,12 +105,12 @@ class BasicModel:
                 # The format can vary depending on LightGBM version and configuration
                 for i in range(len(env.evaluation_result_list)):
                     item = env.evaluation_result_list[i]
-                    
+
                     # Handle different result formats
                     if isinstance(item, tuple) and len(item) == 2:
                         # Format: (name, value)
                         metric_name, metric_value = item
-                        
+
                         # Try to split the metric name if it contains a colon
                         try:
                             dataset_name, metric = metric_name.split(":")
@@ -112,7 +118,7 @@ class BasicModel:
                             # If splitting fails, use the full name
                             dataset_name = "dataset"
                             metric = metric_name
-                            
+
                     elif isinstance(item, list) and len(item) >= 3:
                         # Format: [data_name, metric_name, metric_value, ...]
                         dataset_name = item[0]
@@ -123,16 +129,18 @@ class BasicModel:
                         dataset_name = "dataset"
                         metric = f"metric_{i}"
                         metric_value = float(item)
-                    
+
                     # Log the metric
                     metric_key = f"epoch_{dataset_name}_{metric}"
                     mlflow.log_metric(metric_key, metric_value, step=env.iteration)
-                    logger.debug(f"Epoch {env.iteration}: {dataset_name} {metric} = {metric_value}")
-                    
+                    logger.debug(
+                        f"Epoch {env.iteration}: {dataset_name} {metric} = {metric_value}"
+                    )
+
             except Exception as e:
                 # Log any errors but don't stop training
                 logger.error(f"Error in logging evaluation: {e}")
-                
+
         return False
 
     def train(self):
@@ -140,60 +148,69 @@ class BasicModel:
         Train the model with epoch-level logging.
         """
         logger.info("🚀 Starting training...")
-        
+
         # Start MLflow run
         mlflow.set_experiment(self.experiment_name)
         with mlflow.start_run(tags=self.tags) as run:
             self.run_id = run.info.run_id
-            
+
             # Log parameters
             mlflow.log_param("model_type", "LightGBM with preprocessing")
             mlflow.log_params(self.parameters)
-            
+
             # Preprocess the data
             X_train_processed = self.pipeline.fit_transform(self.X_train)
             X_test_processed = self.pipeline.transform(self.X_test)
-            
+
             # Set up eval_result dict to store evaluation history
             eval_result = {}
-            
+
             # Train the model with evaluation set
             self.lgbm_model.fit(
-                X_train_processed, 
+                X_train_processed,
                 self.y_train,
-                eval_set=[(X_train_processed, self.y_train), (X_test_processed, self.y_test)],
-                eval_names=['train', 'validation'],
-                eval_metric=['l1', 'l2', 'rmse'],
-                callbacks=[lgb.callback.record_evaluation(eval_result), self.log_evaluation],  
-                #eval_result=eval_result  # Store evaluation history
+                eval_set=[
+                    (X_train_processed, self.y_train),
+                    (X_test_processed, self.y_test),
+                ],
+                eval_names=["train", "validation"],
+                eval_metric=["l1", "l2", "rmse"],
+                callbacks=[
+                    lgb.callback.record_evaluation(eval_result),
+                    self.log_evaluation,
+                ],
+                # eval_result=eval_result  # Store evaluation history
             )
-            
+
             # Log the evaluation history at each epoch
             for dataset in eval_result:
                 for metric in eval_result[dataset]:
                     for epoch, value in enumerate(eval_result[dataset][metric]):
                         mlflow.log_metric(f"{dataset}_{metric}", value, step=epoch)
-            
+
             # Make predictions
             y_pred = self.lgbm_model.predict(X_test_processed)
-            
+
             # Evaluate metrics
             mse = mean_squared_error(self.y_test, y_pred)
             mae = mean_absolute_error(self.y_test, y_pred)
             r2 = r2_score(self.y_test, y_pred)
-            
+
             logger.info(f"📊 Mean Squared Error: {mse}")
             logger.info(f"📊 Mean Absolute Error: {mae}")
             logger.info(f"📊 R2 Score: {r2}")
-            
+
             # Log final metrics
             mlflow.log_metric("mse", mse)
             mlflow.log_metric("mae", mae)
             mlflow.log_metric("r2_score", r2)
-            
+
             # Save the complete pipeline for later use
             self.complete_pipeline = Pipeline(
-                steps=[("preprocessor", self.preprocessor), ("regressor", self.lgbm_model)]
+                steps=[
+                    ("preprocessor", self.preprocessor),
+                    ("regressor", self.lgbm_model),
+                ]
             )
 
     def log_model(self):
@@ -203,11 +220,16 @@ class BasicModel:
         if not self.run_id:
             logger.error("No active MLflow run. Call train() first.")
             return
-        
+
         with mlflow.start_run(run_id=self.run_id):
             # Create model signature
-            signature = infer_signature(model_input=self.X_train, model_output=self.lgbm_model.predict(self.pipeline.transform(self.X_test)))
-            
+            signature = infer_signature(
+                model_input=self.X_train,
+                model_output=self.lgbm_model.predict(
+                    self.pipeline.transform(self.X_test)
+                ),
+            )
+
             # Log the dataset
             dataset = mlflow.data.from_spark(
                 self.train_set_spark,
@@ -215,12 +237,12 @@ class BasicModel:
                 version=self.data_version,
             )
             mlflow.log_input(dataset, context="training")
-            
+
             # Log the complete model
             mlflow.sklearn.log_model(
-                sk_model=self.complete_pipeline, 
-                artifact_path="lightgbm-pipeline-model", 
-                signature=signature
+                sk_model=self.complete_pipeline,
+                artifact_path="lightgbm-pipeline-model",
+                signature=signature,
             )
 
     def register_model(self):

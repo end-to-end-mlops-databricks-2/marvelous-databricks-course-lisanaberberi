@@ -41,7 +41,13 @@ class HousePriceModelWrapper(mlflow.pyfunc.PythonModel):
 
 
 class CustomModel:
-    def __init__(self, config: ProjectConfig, tags: Tags, spark: SparkSession, code_paths: List[str]):
+    def __init__(
+        self,
+        config: ProjectConfig,
+        tags: Tags,
+        spark: SparkSession,
+        code_paths: List[str],
+    ):
         """
         Initialize the model with project configuration.
         """
@@ -67,9 +73,13 @@ class CustomModel:
         Target (y_train, y_test)
         """
         logger.info("🔄 Loading data from Databricks tables...")
-        self.train_set_spark = self.spark.table(f"{self.catalog_name}.{self.schema_name}.train_set")
+        self.train_set_spark = self.spark.table(
+            f"{self.catalog_name}.{self.schema_name}.train_set"
+        )
         self.train_set = self.train_set_spark.toPandas()
-        self.test_set = self.spark.table(f"{self.catalog_name}.{self.schema_name}.test_set").toPandas()
+        self.test_set = self.spark.table(
+            f"{self.catalog_name}.{self.schema_name}.test_set"
+        ).toPandas()
         self.data_version = "0"  # describe history -> retrieve
 
         self.X_train = self.train_set[self.num_features + self.cat_features]
@@ -88,11 +98,17 @@ class CustomModel:
         """
         logger.info("🔄 Defining preprocessing pipeline...")
         self.preprocessor = ColumnTransformer(
-            transformers=[("cat", OneHotEncoder(handle_unknown="ignore"), self.cat_features)], remainder="passthrough"
+            transformers=[
+                ("cat", OneHotEncoder(handle_unknown="ignore"), self.cat_features)
+            ],
+            remainder="passthrough",
         )
 
         self.pipeline = Pipeline(
-            steps=[("preprocessor", self.preprocessor), ("regressor", LGBMRegressor(**self.parameters))]
+            steps=[
+                ("preprocessor", self.preprocessor),
+                ("regressor", LGBMRegressor(**self.parameters)),
+            ]
         )
         logger.info("✅ Preprocessing pipeline defined.")
 
@@ -134,7 +150,9 @@ class CustomModel:
             mlflow.log_metric("r2_score", r2)
 
             # Log the model
-            signature = infer_signature(model_input=self.X_train, model_output={"Prediction": 100000.0})
+            signature = infer_signature(
+                model_input=self.X_train, model_output={"Prediction": 100000.0}
+            )
             dataset = mlflow.data.from_spark(
                 self.train_set_spark,
                 table_name=f"{self.catalog_name}.{self.schema_name}.train_set",

@@ -37,13 +37,15 @@ logger.info(yaml.dump(config, default_flow_style=False))
 spark = SparkSession.builder.getOrCreate()
 
 df = spark.read.csv(
-    f"/Volumes/{config.catalog_name}/{config.schema_name}/data/data.csv", header=True, inferSchema=True
+    f"/Volumes/{config.catalog_name}/{config.schema_name}/data/data.csv",
+    header=True,
+    inferSchema=True,
 ).toPandas()
 
 # Generate synthetic data
 ### This is mimicking a new data arrival. In real world, this would be a new batch of data.
 # df is passed to infer schema
-synthetic_df = generate_synthetic_data(df, num_rows=100,  drift=0.1)
+synthetic_df = generate_synthetic_data(df, num_rows=100, drift=0.1)
 logger.info("Synthetic data generated.")
 
 # Initialize DataProcessor
@@ -57,8 +59,8 @@ X_train, X_test = data_processor.split_data()
 logger.info("Training set shape: %s", X_train.shape)
 logger.info("Test set shape: %s", X_test.shape)
 
-#df = df.withColumn("YearBuilt", df["YearBuilt"].cast("long"))
-#df.write.format("delta").option("mergeSchema", "true").mode("overwrite").save("<path_to_delta_table>")
+# df = df.withColumn("YearBuilt", df["YearBuilt"].cast("long"))
+# df.write.format("delta").option("mergeSchema", "true").mode("overwrite").save("<path_to_delta_table>")
 
 
 # Save to catalog

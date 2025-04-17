@@ -1,6 +1,6 @@
 # Databricks notebook source
 #  install the wheel package
-#%pip install file:///Volumes/mlops_dev/lisanabe/packages/house_price-0.0.1-py3-none-any.whl
+# %pip install file:///Volumes/mlops_dev/lisanabe/packages/house_price-0.0.1-py3-none-any.whl
 
 import mlflow
 from pyspark.sql import SparkSession
