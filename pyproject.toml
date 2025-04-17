@@ -36,7 +36,7 @@ build-backend = "setuptools.build_meta"
 where =["src"]
 include = ["house_price*"]
 
-[tool.ruff]
+[tool.ruff.lint]
 line-length = 120
 select = [
     "F",  # pyflakes rules

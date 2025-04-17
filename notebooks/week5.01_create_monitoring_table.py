@@ -154,6 +154,7 @@ inference_data_skewed = spark.table(f"{config.catalog_name}.{config.schema_name}
 
 
 # COMMAND ----------
+dbutils = DBUtils(spark)
 
 token = dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get()
 host = spark.conf.get("spark.databricks.workspaceUrl")
