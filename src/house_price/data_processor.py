@@ -33,8 +33,8 @@ class DataProcessor:
 
         # Handle numeric features
         num_features = self.config.num_features
-        for col in num_features:
-            self.df[col] = pd.to_numeric(self.df[col], errors="coerce")
+        for column in num_features:
+            self.df[column] = pd.to_numeric(self.df[column], errors="coerce")
 
         # Fill missing values with mean or default values
         self.df.fillna(
@@ -164,14 +164,14 @@ def generate_synthetic_data(df, drift: False, num_rows=10):
         "TotalBsmtSF",
         "GrLivArea",
     }
-    for col in int_columns.intersection(df.columns):
-        synthetic_data[col] = synthetic_data[col].astype(np.int32)
+    for column in int_columns.intersection(df.columns):
+        synthetic_data[column] = synthetic_data[column].astype(np.int32)
 
     # Only process columns if they exist in synthetic_data
-    for col in ["LotFrontage", "MasVnrArea", "GarageYrBlt"]:
-        if col in synthetic_data.columns:
-            synthetic_data[col] = pd.to_numeric(synthetic_data[col], errors="coerce")
-            synthetic_data[col] = synthetic_data[col].astype(np.float64)
+    for column in ["LotFrontage", "MasVnrArea", "GarageYrBlt"]:
+        if column in synthetic_data.columns:
+            synthetic_data[column] = pd.to_numeric(synthetic_data[column], errors="coerce")
+            synthetic_data[column] = synthetic_data[column].astype(np.float64)
 
     timestamp_base = int(time.time() * 1000)
     synthetic_data["Id"] = [str(timestamp_base + i) for i in range(num_rows)]
