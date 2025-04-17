@@ -36,9 +36,9 @@ build-backend = "setuptools.build_meta"
 where =["src"]
 include = ["house_price*"]
 
-[tool.ruff]
+# [tool.ruff]
 # Global Ruff settings
-line-length = 120
+# line-length = 120
 
 [tool.ruff.lint]
 select = [
