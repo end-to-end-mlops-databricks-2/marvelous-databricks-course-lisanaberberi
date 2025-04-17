@@ -8,7 +8,8 @@ from lightgbm import LGBMRegressor
 from loguru import logger
 from mlflow.models import infer_signature
 from mlflow.tracking import MlflowClient
-from pyspark.sql import SparkSession
+from pyspark.sql import DataFrame, SparkSession
+from pyspark.sql import functions as F
 from sklearn.compose import ColumnTransformer
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.pipeline import Pipeline
@@ -45,8 +46,9 @@ class FeatureLookUpModel:
 
     def create_feature_table(self):
         """
-        Create or replace the house_features table and populate it.
+        Create or update the house_features table and populate it.
         """
+
         self.spark.sql(f"""
         CREATE OR REPLACE TABLE {self.feature_table_name}
         (Id STRING NOT NULL, OverallQual INT, GrLivArea INT, GarageCars INT);
@@ -183,7 +185,9 @@ class FeatureLookUpModel:
             version=latest_version,
         )
 
-    def load_latest_model_and_predict(self, X):
+        return latest_version
+
+    def load_latest_model_and_predict(self, X: DataFrame):
         """
         Load the trained model from MLflow using Feature Engineering Client and make predictions.
         """
@@ -191,3 +195,76 @@ class FeatureLookUpModel:
 
         predictions = self.fe.score_batch(model_uri=model_uri, df=X)
         return predictions
+
+    def update_feature_table(self):
+        """
+        Updates the house_features table with the latest records from train and test sets.
+        """
+        queries = [
+            f"""
+            WITH max_timestamp AS (
+                SELECT MAX(update_timestamp_utc) AS max_update_timestamp
+                FROM {self.config.catalog_name}.{self.config.schema_name}.train_set
+            )
+            INSERT INTO {self.feature_table_name}
+            SELECT Id, OverallQual, GrLivArea, GarageCars
+            FROM {self.config.catalog_name}.{self.config.schema_name}.train_set
+            WHERE update_timestamp_utc >= (SELECT max_update_timestamp FROM max_timestamp)
+            """,
+            f"""
+            WITH max_timestamp AS (
+                SELECT MAX(update_timestamp_utc) AS max_update_timestamp
+                FROM {self.config.catalog_name}.{self.config.schema_name}.test_set
+            )
+            INSERT INTO {self.feature_table_name}
+            SELECT Id, OverallQual, GrLivArea, GarageCars
+            FROM {self.config.catalog_name}.{self.config.schema_name}.test_set
+            WHERE update_timestamp_utc >= (SELECT max_update_timestamp FROM max_timestamp)
+            """,
+        ]
+
+        for query in queries:
+            logger.info("Executing SQL update query...")
+            self.spark.sql(query)
+        logger.info("House features table updated successfully.")
+
+    def model_improved(self, test_set: DataFrame):
+        """
+        Evaluate the model performance on the test set.
+        """
+        X_test = test_set.drop(self.config.target)
+
+        predictions_latest = self.load_latest_model_and_predict(X_test).withColumnRenamed(
+            "prediction", "prediction_latest"
+        )
+
+        current_model_uri = f"runs:/{self.run_id}/lightgbm-pipeline-model-fe"
+        predictions_current = self.fe.score_batch(model_uri=current_model_uri, df=X_test).withColumnRenamed(
+            "prediction", "prediction_current"
+        )
+
+        test_set = test_set.select("Id", "SalePrice")
+
+        logger.info("Predictions are ready.")
+
+        # Join the DataFrames on the 'id' column
+        df = test_set.join(predictions_current, on="Id").join(predictions_latest, on="Id")
+
+        # Calculate the absolute error for each model
+        df = df.withColumn("error_current", F.abs(df["SalePrice"] - df["prediction_current"]))
+        df = df.withColumn("error_latest", F.abs(df["SalePrice"] - df["prediction_latest"]))
+
+        # Calculate the Mean Absolute Error (MAE) for each model
+        mae_current = df.agg(F.mean("error_current")).collect()[0][0]
+        mae_latest = df.agg(F.mean("error_latest")).collect()[0][0]
+
+        # Compare models based on MAE
+        logger.info(f"MAE for Current Model: {mae_current}")
+        logger.info(f"MAE for Latest Model: {mae_latest}")
+
+        if mae_current < mae_latest:
+            logger.info("Current Model performs better. Registering new model.")
+            return True
+        else:
+            logger.info("New Model performs worse. Keeping the old model.")
+            return False

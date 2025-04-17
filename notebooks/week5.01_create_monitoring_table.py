@@ -17,10 +17,8 @@ from pyspark.sql import SparkSession
 
 from house_price.config import ProjectConfig
 
-spark = SparkSession.builder.getOrCreate()
-
 # Load configuration
-config = ProjectConfig.from_yaml(config_path="project_config.yml", env="dev")
+config = ProjectConfig.from_yaml(config_path="../project_config.yaml", env="dev")
 spark = SparkSession.builder.getOrCreate()
 
 train_set = spark.table(f"{config.catalog_name}.{config.schema_name}.train_set").toPandas()
@@ -37,10 +35,10 @@ from sklearn.preprocessing import LabelEncoder
 # Encode categorical and datetime variables
 def preprocess_data(df):
     label_encoders = {}
-    for col in df.select_dtypes(include=['object', 'datetime']).columns:
+    for column in df.select_dtypes(include=['object', 'datetime']).columns:
         le = LabelEncoder()
-        df[col] = le.fit_transform(df[col].astype(str))
-        label_encoders[col] = le
+        df[column] = le.fit_transform(df[column].astype(str))
+        label_encoders[column] = le
     return df, label_encoders
 
 train_set, label_encoders = preprocess_data(train_set)
@@ -138,7 +136,7 @@ from house_price.config import ProjectConfig
 spark = SparkSession.builder.getOrCreate()
 
 # Load configuration
-config = ProjectConfig.from_yaml(config_path="project_config.yml", env="prd")
+config = ProjectConfig.from_yaml(config_path="../project_config.yaml", env="prd")
 
 test_set = spark.table(f"{config.catalog_name}.{config.schema_name}.test_set") \
                         .withColumn("Id", col("Id").cast("string")) \
@@ -271,6 +269,6 @@ spark = DatabricksSession.builder.getOrCreate()
 workspace = WorkspaceClient()
 
 # Load configuration
-config = ProjectConfig.from_yaml(config_path="project_config.yml", env="prd")
+config = ProjectConfig.from_yaml(config_path="../project_config.yaml", env="prd")
 
 create_or_refresh_monitoring(config=config, spark=spark, workspace=workspace)
