@@ -8,6 +8,8 @@ from pyspark.sql.functions import current_timestamp, to_utc_timestamp
 from sklearn.model_selection import train_test_split
 
 from house_price.config import ProjectConfig
+from pyspark.sql.functions import col
+from pyspark.sql.types import IntegerType, LongType
 
 
 class DataProcessor:
@@ -60,24 +62,50 @@ class DataProcessor:
         train_set, test_set = train_test_split(self.df, test_size=test_size, random_state=random_state)
         return train_set, test_set
 
+
+    def resolve_schema_conflicts(self, df):
+        """
+        Resolve potential schema conflicts, especially for YearBuilt column
+        
+        Args:
+            df (pyspark.sql.DataFrame): Input DataFrame
+        
+        Returns:
+            pyspark.sql.DataFrame: DataFrame with resolved schema
+        """
+        # Ensure YearBuilt is consistently typed
+        df = df.withColumn("YearBuilt", col("YearBuilt").cast(IntegerType()))
+        
+        # Optionally, drop duplicate columns if they exist
+        df = df.select(*set(df.columns))
+        
+        return df
+
+    # Usage in your save_to_catalog method
     def save_to_catalog(self, train_set: pd.DataFrame, test_set: pd.DataFrame):
         """Save the train and test sets into Databricks tables."""
-
-        train_set_with_timestamp = self.spark.createDataFrame(train_set).withColumn(
+        # Convert pandas to Spark DataFrame and resolve schema
+        train_spark = self.resolve_schema_conflicts(self.spark.createDataFrame(train_set))
+        test_spark = self.resolve_schema_conflicts(self.spark.createDataFrame(test_set))
+        
+        # Add timestamp column
+        train_set_with_timestamp = train_spark.withColumn(
             "update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC")
         )
-
-        test_set_with_timestamp = self.spark.createDataFrame(test_set).withColumn(
+        test_set_with_timestamp = test_spark.withColumn(
             "update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC")
         )
-
-        train_set_with_timestamp.write.mode("append").saveAsTable(
-            f"{self.config.catalog_name}.{self.config.schema_name}.train_set"
-        )
-
-        test_set_with_timestamp.write.mode("append").saveAsTable(
-            f"{self.config.catalog_name}.{self.config.schema_name}.test_set"
-        )
+        
+        # Save with merge schema option
+        train_set_with_timestamp.write.format("delta") \
+            .option("mergeSchema", "true") \
+            .mode("overwrite") \
+            .saveAsTable(f"{self.config.catalog_name}.{self.config.schema_name}.train_set")
+        
+        test_set_with_timestamp.write.format("delta") \
+            .option("mergeSchema", "true") \
+            .mode("overwrite") \
+            .saveAsTable(f"{self.config.catalog_name}.{self.config.schema_name}.test_set")
 
     def enable_change_data_feed(self):
         self.spark.sql(

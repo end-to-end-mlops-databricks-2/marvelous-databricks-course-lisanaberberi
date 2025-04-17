@@ -1,6 +1,6 @@
 [project]
 name = "house-price"
-version = "0.0.1"
+version = "1.0.0"
 description = "Housing prices project"
 requires-python = ">=3.11, <3.12"
 dependencies = ["mlflow==2.17.0",

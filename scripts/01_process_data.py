@@ -26,7 +26,7 @@ parser.add_argument(
 
 args = parser.parse_args()
 root_path = args.root_path
-config_path = f"{root_path}/files/project_config.yml"
+config_path = f"{root_path}/files/project_config.yaml"
 
 config = ProjectConfig.from_yaml(config_path=config_path, env=args.env)
 
@@ -43,7 +43,7 @@ df = spark.read.csv(
 # Generate synthetic data
 ### This is mimicking a new data arrival. In real world, this would be a new batch of data.
 # df is passed to infer schema
-synthetic_df = generate_synthetic_data(df, num_rows=100)
+synthetic_df = generate_synthetic_data(df, num_rows=100,  drift=0.1)
 logger.info("Synthetic data generated.")
 
 # Initialize DataProcessor
@@ -56,6 +56,10 @@ data_processor.preprocess()
 X_train, X_test = data_processor.split_data()
 logger.info("Training set shape: %s", X_train.shape)
 logger.info("Test set shape: %s", X_test.shape)
+
+#df = df.withColumn("YearBuilt", df["YearBuilt"].cast("long"))
+#df.write.format("delta").option("mergeSchema", "true").mode("overwrite").save("<path_to_delta_table>")
+
 
 # Save to catalog
 logger.info("Saving data to catalog")

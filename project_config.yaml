@@ -1,15 +1,15 @@
 prd:
-  catalog_name: mlops_prod
+  catalog_name: mlops_dev
   schema_name: lisanabe
-  pipeline_id: 1818db79-f551-49bb-ad4f-f61cac9d91fc
+  pipeline_id: a1f3a4f7-e0c4-404c-b617-d9fa8aa197d5
 acc:
-  catalog_name: mlops_acc
+  catalog_name: mlops_dev
   schema_name: lisanabe
   pipeline_id: 94748db79-f551-49bb-ad4f-f61cac9d91fc
 dev:
   catalog_name: mlops_dev
   schema_name: lisanabe
-  pipeline_id: 0498db79-f551-49bb-ad4f-finac9d91fc
+  pipeline_id: c5e0ed04-b782-4d57-9b97-200cbf27ba52
 
 
 # catalog_name: mlops_dev

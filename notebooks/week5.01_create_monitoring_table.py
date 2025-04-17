@@ -16,6 +16,27 @@ import numpy as np
 from pyspark.sql import SparkSession
 
 from house_price.config import ProjectConfig
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.preprocessing import LabelEncoder
+
+from house_price.data_processor import generate_synthetic_data
+import time
+from databricks.sdk import WorkspaceClient
+
+import datetime
+import itertools
+import requests
+
+from databricks.connect import DatabricksSession
+from pyspark.sql import functions as F
+from pyspark.sql.types import StructType, StructField, StringType, IntegerType, DoubleType, ArrayType
+
+from house_price.monitoring import create_or_refresh_monitoring
+
+
+
+
+
 
 # Load configuration
 config = ProjectConfig.from_yaml(config_path="../project_config.yaml", env="dev")
@@ -25,12 +46,6 @@ train_set = spark.table(f"{config.catalog_name}.{config.schema_name}.train_set")
 test_set = spark.table(f"{config.catalog_name}.{config.schema_name}.test_set").toPandas()
 
 # COMMAND ----------
-
-
-import pandas as pd
-import numpy as np
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.preprocessing import LabelEncoder
 
 # Encode categorical and datetime variables
 def preprocess_data(df):
@@ -67,7 +82,6 @@ print(feature_importances.head(5))
 # MAGIC ## Generate Synthetic Data
 
 # COMMAND ----------
-from house_price.data_processor import generate_synthetic_data
 
 inference_data_skewed = generate_synthetic_data(train_set, drift= True, num_rows=200)
 
@@ -88,8 +102,6 @@ inference_data_skewed_spark.write.mode("overwrite").saveAsTable(
 
 # COMMAND ----------
 
-import time
-from databricks.sdk import WorkspaceClient
 
 workspace = WorkspaceClient()
 
@@ -123,15 +135,7 @@ while True:
 
 # COMMAND ----------
 
-import pandas as pd
-from pyspark.sql.functions import col
-from pyspark.sql.functions import current_timestamp, to_utc_timestamp
-import numpy as np
-import datetime
-import itertools
-from pyspark.sql import SparkSession
 
-from house_price.config import ProjectConfig
 
 spark = SparkSession.builder.getOrCreate()
 
@@ -156,9 +160,7 @@ host = spark.conf.get("spark.databricks.workspaceUrl")
 # COMMAND ----------
 
 
-from databricks.sdk import WorkspaceClient
-import requests
-import time
+
 
 workspace = WorkspaceClient()
 
@@ -256,14 +258,6 @@ for index, record in enumerate(itertools.cycle(sampled_skewed_records)):
 
 # COMMAND ----------
 
-from pyspark.sql.functions import col
-from databricks.connect import DatabricksSession
-from pyspark.sql import functions as F
-from pyspark.sql.types import StructType, StructField, StringType, IntegerType, DoubleType, ArrayType
-from databricks.sdk import WorkspaceClient
-
-from house_price.config import ProjectConfig
-from house_price.monitoring import create_or_refresh_monitoring
 
 spark = DatabricksSession.builder.getOrCreate()
 workspace = WorkspaceClient()
