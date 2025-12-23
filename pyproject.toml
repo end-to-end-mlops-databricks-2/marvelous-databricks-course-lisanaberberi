@@ -1,6 +1,6 @@
 [project]
-name = "housing-price"
-version = "0.0.1"
+name = "house-price"
+version = "1.0.0"
 description = "Housing prices project"
 requires-python = ">=3.11, <3.12"
 dependencies = ["mlflow==2.17.0",
@@ -17,7 +17,8 @@ dependencies = ["mlflow==2.17.0",
                 "databricks-feature-engineering==0.6",
                 "databricks-feature-lookup==1.2.0",
                 "databricks-sdk==0.32.0",
-                "pydantic==2.9.2"
+                "pydantic==2.9.2",
+                "loguru==0.7.3"
                 ]
 
 [project.optional-dependencies]
@@ -35,8 +36,8 @@ build-backend = "setuptools.build_meta"
 where =["src"]
 include = ["house_price*"]
 
-[tool.ruff]
-line-length = 120
+
+[tool.ruff.lint]
 select = [
     "F",  # pyflakes rules
     "E",  # pycodestyle error rules

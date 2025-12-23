@@ -1,6 +1,14 @@
 <h1 align="center">
 Marvelous MLOps End-to-end MLOps with Databricks course
 
+## Week-1
+
+
+Use the dataset housing-prices
+
+<!-- [Diamonds](https://www.kaggle.com/datasets/shivam2503/diamonds?resource=download)
+Analyze diamonds by their cut, color, clarity, price, and other attributes -->
+
 ## Practical information
 - Weekly lectures on Wednesdays 16:00-18:00 CET.
 - Code for the lecture is shared before the lecture.
@@ -24,3 +32,31 @@ source venv/bin/activate
 uv pip install -r pyproject.toml --all-extras
 uv lock
 ```
+
+## C4 model architecture for managing House Price Prediction ML lifecycle
+
+![C4 system context](images/system-context-diagram-1.svg)
+
+## 📊 Weekly Development Progress
+
+### Week 1: Data Preparation and Preprocessing
+
+✨ Key Features:
+
+- Comprehensive  `DataProcessor` class for house price dataset preparation
+     - The  `DataProcessor` class handles all aspects of preparing house price data for ML:
+        - Initialization: Takes a pandas DataFrame, configuration object, and SparkSession
+        - Preprocessing: Handles missing values, data type conversion, and feature selection
+        - Data Splitting: Divides data into training and test sets
+        - Catalog Integration: Saves processed data to Databricks tables with timestamps
+        - Delta Lake Features: Enables Change Data Feed for data versioning
+
+- **Key Methods**
+- preprocess() --
+Converts numeric columns using pd.to_numeric()
+Handles missing values in "LotFrontage" and "GarageYrBlt"
+Creates derived feature "GarageAge" from "GarageYrBlt"
+- split_data() -- Divides processed data into training and test sets. Configurable test size and random state parameters
+Returns separate pandas DataFrames for train and test
+- save_to_catalog() -- Converts pandas DataFrames to Spark DataFrame.
+- enable_change_data_feed() -- Enables Delta Lake's Change Data Feed feature on train and test tables. Supports advanced data versioning and change tracking capabilities

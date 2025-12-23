@@ -1,0 +1,69 @@
+prd:
+  catalog_name: mlops_dev
+  schema_name: lisanabe
+  pipeline_id: a1f3a4f7-e0c4-404c-b617-d9fa8aa197d5
+acc:
+  catalog_name: mlops_dev
+  schema_name: lisanabe
+  pipeline_id: 94748db79-f551-49bb-ad4f-f61cac9d91fc
+dev:
+  catalog_name: mlops_dev
+  schema_name: lisanabe
+  pipeline_id: c5e0ed04-b782-4d57-9b97-200cbf27ba52
+
+
+# catalog_name: mlops_dev
+# schema_name: lisanabe
+
+experiment_name_basic:  /Shared/house-prices-basic
+experiment_name_custom: /Shared/house-prices-custom-lb
+experiment_name_fe: /Shared/house-prices-fe
+
+parameters:
+  learning_rate: 0.01
+  n_estimators: 100
+  max_depth: 6
+
+parameters_a:
+  learning_rate: 0.01
+  n_estimators: 1000
+  max_depth: 6
+
+parameters_b:
+  learning_rate: 0.02
+  n_estimators: 1000
+  max_depth: 5
+
+num_features:
+  - LotFrontage
+  - LotArea
+  - OverallQual
+  - OverallCond
+  - YearBuilt
+  - YearRemodAdd
+  - MasVnrArea
+  - TotalBsmtSF
+  - GrLivArea
+  - GarageCars
+
+cat_features:
+  - MSZoning
+  - Street
+  - Alley
+  - LotShape
+  - LandContour
+  - Neighborhood
+  - Condition1
+  - BldgType
+  - HouseStyle
+  - RoofStyle
+  - Exterior1st
+  - Exterior2nd
+  - MasVnrType
+  - Foundation
+  - Heating
+  - CentralAir
+  - SaleType
+  - SaleCondition
+
+target: SalePrice
