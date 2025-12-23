@@ -33,6 +33,9 @@ uv lock
 ## C4 model architecture for managing House Price Prediction ML lifecycle
 
 ![C4 system context](images/system-context-diagram-1.svg)
+Adv: lead to better communication and clarity between the different teams involved in this MLOps solution
+I used https://structurizr.com/ to code this architecture .
+
 
 ## 📊 Weekly Development Progress
 
@@ -84,5 +87,30 @@ Returns separate pandas DataFrames for train and test
 - `create_feature_table()` - Create UC feature table with primary keys and CDC
 - `define_feature_function()` - Define Python UDF for calculated features
 - `feature_engineering()` - Create training set with FeatureLookup and FeatureFunction
-- `update_feature_table()` - Incremental updates based on timestamps
-- `model_improved()` - Compare models and promote if performance improves
+
+
+### Week 3: Model Serving and Deployment
+
+✨ **Key Features:**
+
+#### Model Serving Implementation
+
+| Component | Description |
+|-----------|-------------|
+| **FeatureLookupServing** | Manages model serving endpoints with integrated feature lookup, online tables, and real-time predictions |
+| **Online Table Creation** | Creates and maintains online feature tables from Delta tables for low-latency feature retrieval |
+| **Serving Endpoint Deployment** | Deploys/updates REST API endpoints for model inference with feature engineering support |
+
+#### Key Methods
+
+- `create_online_table()` - Create online table from feature table for real-time feature serving
+- `deploy_or_update_serving_endpoint()` - Deploy or update Databricks model serving endpoint
+- `call_endpoint()` - Call endpoint via REST API with Bearer token authentication
+
+#### Workflow
+
+1. Load project configuration from YAML
+2. Initialize `FeatureLookupServing` with model name and endpoint configuration
+3. Create online table for low-latency feature lookups
+4. Deploy serving endpoint with feature lookup integration
+5. Make predictions via REST API with `dataframe_records` format
