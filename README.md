@@ -1,7 +1,7 @@
 <h1 align="center">
 Marvelous MLOps End-to-end MLOps with Databricks course
 
-## Week-1
+## Intro
 
 
 Use the dataset housing-prices
