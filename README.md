@@ -32,7 +32,7 @@ uv lock
 
 ## C4 model architecture for managing House Price Prediction ML lifecycle
 
-![C4 system context](images/system-context-diagram-1.svg)
+![C4 system context](images/system-context-diagram-1.png)
 Adv: lead to better communication and clarity between the different teams involved in this MLOps solution
 I used https://structurizr.com/ to code this architecture .
 
@@ -106,6 +106,8 @@ Returns separate pandas DataFrames for train and test
 - `create_online_table()` - Create online table from feature table for real-time feature serving
 - `deploy_or_update_serving_endpoint()` - Deploy or update Databricks model serving endpoint
 - `call_endpoint()` - Call endpoint via REST API with Bearer token authentication
+Example:
+![C4 system context](images/endpoint.jpeg)
 
 #### Workflow
 
