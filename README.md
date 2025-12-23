@@ -59,4 +59,3 @@ Creates derived feature "GarageAge" from "GarageYrBlt"
 - split_data() -- Divides processed data into training and test sets. Configurable test size and random state parameters
 Returns separate pandas DataFrames for train and test
 - save_to_catalog() -- Converts pandas DataFrames to Spark DataFrame.
-- enable_change_data_feed() -- Enables Delta Lake's Change Data Feed feature on train and test tables. Supports advanced data versioning and change tracking capabilities
