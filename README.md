@@ -56,3 +56,33 @@ Creates derived feature "GarageAge" from "GarageYrBlt"
 - split_data() -- Divides processed data into training and test sets. Configurable test size and random state parameters
 Returns separate pandas DataFrames for train and test
 - save_to_catalog() -- Converts pandas DataFrames to Spark DataFrame.
+
+
+### Week 2: Feature Engineering and Model Training
+
+✨ **Key Features:**
+
+#### Three Model Implementations
+
+| Model | Description |
+|-------|-------------|
+| **BasicModel** | Trains LGBMRegressor with epoch-level MLflow logging and model registry |
+| **CustomModel** | Production-ready model with custom `HousePriceModelWrapper` for formatted predictions, code paths, and conda dependencies |
+| **FeatureLookUpModel** | Feature-engineered model using Databricks Feature Engineering Client with feature tables, UDFs, and automated model promotion |
+
+#### Common Methods
+
+- `load_data()` - Load train/test sets from Delta tables
+- `prepare_features()` - ColumnTransformer pipeline with OneHotEncoder
+- `train()` - Train LGBMRegressor model
+- `log_model()` - Log to MLflow with metrics (MSE, MAE, R²)
+- `register_model()` - Register in Unity Catalog with aliases
+- `load_latest_model_and_predict()` - Load and generate predictions
+
+#### FeatureLookUpModel Specific Methods
+
+- `create_feature_table()` - Create UC feature table with primary keys and CDC
+- `define_feature_function()` - Define Python UDF for calculated features
+- `feature_engineering()` - Create training set with FeatureLookup and FeatureFunction
+- `update_feature_table()` - Incremental updates based on timestamps
+- `model_improved()` - Compare models and promote if performance improves
