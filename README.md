@@ -150,9 +150,6 @@ Example:
 - `databricks bundle deploy -t <environment>` - Deploy bundle to specified environment (dev/staging/prod)
 - `databricks bundle run <job_name> -t <environment>` - Run a job defined in the bundle
 
-**Configuration Structure:**
-```yaml
-
 
 ### Week 5: Inference Tables & Lakehouse Monitoring
 
