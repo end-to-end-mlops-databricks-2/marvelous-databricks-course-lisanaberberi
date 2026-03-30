@@ -107,6 +107,7 @@ Returns separate pandas DataFrames for train and test
 - `create_online_table()` - Create online table from feature table for real-time feature serving
 - `deploy_or_update_serving_endpoint()` - Deploy or update Databricks model serving endpoint
 - `call_endpoint()` - Call endpoint via REST API with Bearer token authentication
+
 Example:
 ![Serve endpoint](images/endpoint.jpeg)
 
